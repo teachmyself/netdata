@@ -26,8 +26,10 @@
 //
 
 const char *global_backend_prefix = "netdata";
+const char *global_backend_send_charts_matching = "*";
 int global_backend_update_every = 10;
 BACKEND_OPTIONS global_backend_options = BACKEND_SOURCE_DATA_AVERAGE | BACKEND_OPTION_SEND_NAMES;
+const char *global_backend_source = NULL;
 
 // ----------------------------------------------------------------------------
 // helper functions for backends
@@ -205,7 +207,7 @@ inline int backends_can_send_rrdset(BACKEND_OPTIONS backend_options, RRDSET *st)
         }
     }
 
-    if(unlikely(!rrdset_is_available_for_backends(st))) {
+    if(unlikely(!rrdset_is_available_for_exporting_and_alarms(st))) {
         debug(D_BACKEND, "BACKEND: not sending chart '%s' of host '%s', because it is not available for backends.", st->id, host->hostname);
         return 0;
     }
@@ -419,7 +421,7 @@ void backend_set_graphite_variables(int *default_port,
 /**
  * Select Type
  *
- * Select the backedn type based in the user input
+ * Select the backend type based in the user input
  *
  * @param type is the string that defines the backend type
  *
@@ -454,7 +456,7 @@ BACKEND_TYPE backend_select_type(const char *type) {
 /**
  * Backend main
  *
- * The main thread used to control the backedns.
+ * The main thread used to control the backends.
  *
  * @param ptr a pointer to netdata_static_structure.
  *
@@ -516,7 +518,10 @@ void *backends_main(void *ptr) {
     else
         global_backend_options &= ~BACKEND_OPTION_SEND_NAMES;
 
-    charts_pattern = simple_pattern_create(config_get(CONFIG_SECTION_BACKEND, "send charts matching", "*"), NULL, SIMPLE_PATTERN_EXACT);
+    charts_pattern = simple_pattern_create(
+        global_backend_send_charts_matching = config_get(CONFIG_SECTION_BACKEND, "send charts matching", "*"),
+        NULL,
+        SIMPLE_PATTERN_EXACT);
     hosts_pattern  = simple_pattern_create(config_get(CONFIG_SECTION_BACKEND, "send hosts matching", "localhost *"), NULL, SIMPLE_PATTERN_EXACT);
 
 #if ENABLE_PROMETHEUS_REMOTE_WRITE
@@ -528,6 +533,7 @@ void *backends_main(void *ptr) {
     // and prepare for sending data to our backend
 
     global_backend_options = backend_parse_data_source(source, global_backend_options);
+    global_backend_source = source;
 
     if(timeoutms < 1) {
         error("BACKEND: invalid timeout %ld ms given. Assuming %d ms.", timeoutms, global_backend_update_every * 2 * 1000);
@@ -551,7 +557,7 @@ void *backends_main(void *ptr) {
         case BACKEND_TYPE_OPENTSDB_USING_HTTP: {
 #ifdef ENABLE_HTTPS
             if (!strcmp(type, "opentsdb:https")) {
-                security_start_ssl(NETDATA_SSL_CONTEXT_OPENTSDB);
+                security_start_ssl(NETDATA_SSL_CONTEXT_EXPORTING);
             }
 #endif
             backend_set_opentsdb_http_variables(&default_port,&backend_response_checker,&backend_request_formatter);
@@ -688,7 +694,7 @@ void *backends_main(void *ptr) {
     rrddim_add(chart_latency, "latency",   NULL,  1, 1000, RRD_ALGORITHM_ABSOLUTE);
     */
 
-    RRDSET *chart_rusage = rrdset_create_localhost("netdata", "backend_thread_cpu", NULL, "backend", NULL, "NetData Backend Thread CPU usage", "milliseconds/s", "backends", NULL, 130630, global_backend_update_every, RRDSET_TYPE_STACKED);
+    RRDSET *chart_rusage = rrdset_create_localhost("netdata", "backend_thread_cpu", NULL, "backend", NULL, "Netdata Backend Thread CPU usage", "milliseconds/s", "backends", NULL, 130630, global_backend_update_every, RRDSET_TYPE_STACKED);
     rrddim_add(chart_rusage, "user",   NULL, 1, 1000, RRD_ALGORITHM_INCREMENTAL);
     rrddim_add(chart_rusage, "system", NULL, 1, 1000, RRD_ALGORITHM_INCREMENTAL);
 
@@ -697,6 +703,7 @@ void *backends_main(void *ptr) {
     // prepare the backend main loop
 
     info("BACKEND: configured ('%s' on '%s' sending '%s' data, every %d seconds, as host '%s', with prefix '%s')", type, destination, source, global_backend_update_every, hostname, global_backend_prefix);
+    send_statistics("BACKEND_START", "OK", type);
 
     usec_t step_ut = global_backend_update_every * USEC_PER_SEC;
     time_t after = now_realtime_sec();
@@ -1000,9 +1007,9 @@ void *backends_main(void *ptr) {
                 sock = connect_to_one_of(destination, default_port, &timeout, &reconnects, NULL, 0);
 #ifdef ENABLE_HTTPS
                 if(sock != -1) {
-                    if(netdata_opentsdb_ctx) {
+                    if(netdata_exporting_ctx) {
                         if(!opentsdb_ssl.conn) {
-                            opentsdb_ssl.conn = SSL_new(netdata_opentsdb_ctx);
+                            opentsdb_ssl.conn = SSL_new(netdata_exporting_ctx);
                             if(!opentsdb_ssl.conn) {
                                 error("Failed to allocate SSL structure %d.", sock);
                                 opentsdb_ssl.flags = NETDATA_SSL_NO_HANDSHAKE;
@@ -1072,7 +1079,7 @@ void *backends_main(void *ptr) {
                                     "Content-Length: %zu\r\n"
                                     "Content-Type: application/x-www-form-urlencoded\r\n\r\n",
                                     remote_write_path,
-                                    hostname,
+                                    destination,
                                     data_size
                     );
 
@@ -1228,7 +1235,7 @@ cleanup:
     buffer_free(response);
 
 #ifdef ENABLE_HTTPS
-    if(netdata_opentsdb_ctx) {
+    if(netdata_exporting_ctx) {
         if(opentsdb_ssl.conn) {
             SSL_free(opentsdb_ssl.conn);
         }

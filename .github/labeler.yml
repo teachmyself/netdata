@@ -13,10 +13,13 @@
 ACLK:
   - aclk/*
   - aclk/**/*
+  - mqtt_websockets
 
 area/backends:
   - backends/*
   - backends/**/*
+
+area/exporting:
   - exporting/*
   - exporting/**/*
 
@@ -52,7 +55,6 @@ area/docs:
   - "**/*.md"
   - diagrams/*
   - diagrams/**/*
-  - netlify.toml
 
 area/external/python:
   - collectors/python.d.plugin/*

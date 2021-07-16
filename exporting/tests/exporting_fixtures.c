@@ -5,6 +5,7 @@
 int setup_configured_engine(void **state)
 {
     struct engine *engine = __mock_read_exporting_config();
+    engine->instance_root->data_is_ready = 1;
 
     *state = engine;
 
@@ -18,11 +19,12 @@ int teardown_configured_engine(void **state)
     struct instance *instance = engine->instance_root;
     free((void *)instance->config.destination);
     free((void *)instance->config.name);
+    free((void *)instance->config.prefix);
+    free((void *)instance->config.hostname);
     simple_pattern_free(instance->config.charts_pattern);
     simple_pattern_free(instance->config.hosts_pattern);
     free(instance);
 
-    free((void *)engine->config.prefix);
     free((void *)engine->config.hostname);
     free(engine);
 
@@ -41,13 +43,13 @@ int setup_rrdhost()
     label->key = strdupz("key1");
     label->value = strdupz("value1");
     label->label_source = LABEL_SOURCE_NETDATA_CONF;
-    localhost->labels = label;
+    localhost->labels.head = label;
 
     label = calloc(1, sizeof(struct label));
     label->key = strdupz("key2");
     label->value = strdupz("value2");
     label->label_source = LABEL_SOURCE_AUTO;
-    localhost->labels->next = label;
+    localhost->labels.head->next = label;
 
     localhost->rrdset_root = calloc(1, sizeof(RRDSET));
     RRDSET *st = localhost->rrdset_root;
@@ -91,12 +93,12 @@ int teardown_rrdhost()
     free((void *)st->name);
     free(st);
 
-    free(localhost->labels->next->key);
-    free(localhost->labels->next->value);
-    free(localhost->labels->next);
-    free(localhost->labels->key);
-    free(localhost->labels->value);
-    free(localhost->labels);
+    free(localhost->labels.head->next->key);
+    free(localhost->labels.head->next->value);
+    free(localhost->labels.head->next);
+    free(localhost->labels.head->key);
+    free(localhost->labels.head->value);
+    free(localhost->labels.head);
 
     free((void *)localhost->tags);
     free(localhost);
@@ -143,6 +145,8 @@ int setup_prometheus(void **state)
 
     prometheus_exporter_instance->config.charts_pattern = simple_pattern_create("*", NULL, SIMPLE_PATTERN_EXACT);
     prometheus_exporter_instance->config.hosts_pattern = simple_pattern_create("*", NULL, SIMPLE_PATTERN_EXACT);
+
+    prometheus_exporter_instance->config.initialized = 1;
 
     return 0;
 }

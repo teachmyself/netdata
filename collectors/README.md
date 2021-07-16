@@ -1,8 +1,6 @@
 <!--
----
 title: "Collecting metrics"
 custom_edit_url: https://github.com/netdata/netdata/edit/master/collectors/README.md
----
 -->
 
 # Collecting metrics
@@ -30,19 +28,19 @@ guide](/collectors/QUICKSTART.md).
 
 [Collectors configuration reference](/collectors/REFERENCE.md)
 
-## Tutorials
+## Guides
 
-[Monitor Nginx or Apache web server log files with Netdata](/docs/tutorials/collect-apache-nginx-web-logs.md)
+[Monitor Nginx or Apache web server log files with Netdata](/docs/guides/collect-apache-nginx-web-logs.md)
 
-[Monitor CockroadchDB metrics with Netdata](/docs/tutorials/monitor-cockroachdb.md)
+[Monitor CockroachDB metrics with Netdata](/docs/guides/monitor-cockroachdb.md)
 
-[Monitor Unbound DNS servers with Netdata](/docs/tutorials/collect-unbound-metrics.md)
+[Monitor Unbound DNS servers with Netdata](/docs/guides/collect-unbound-metrics.md)
 
-[Monitor a Hadoop cluster with Netdata](/docs/tutorials/monitor-hadoop-cluster.md)
+[Monitor a Hadoop cluster with Netdata](/docs/guides/monitor-hadoop-cluster.md)
 
 ## Related features
 
-**[Dashboards](/web/README.md)**: Vizualize your newly-collect metrics in real-time using Netdata's [built-in
+**[Dashboards](/web/README.md)**: Visualize your newly-collect metrics in real-time using Netdata's [built-in
 dashboard](/web/gui/README.md). 
 
 **[Backends](/backends/README.md)**: Extend our built-in [database engine](/database/engine/README.md), which supports

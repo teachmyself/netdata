@@ -12,6 +12,8 @@ CLEANFILES = \
     netdata-lsb \
     netdata-freebsd \
     netdata.plist \
+    netdata.crontab \
+    netdata-updater.service \
     $(NULL)
 
 include $(top_srcdir)/build/subst.inc
@@ -19,6 +21,10 @@ SUFFIXES = .in
 
 dist_config_SCRIPTS = \
     edit-config \
+    $(NULL)
+
+dist_config_DATA = \
+    .install-type \
     $(NULL)
 
 # Explicitly install directories to avoid permission issues due to umask
@@ -34,6 +40,8 @@ nodist_noinst_DATA = \
     netdata-lsb \
     netdata-freebsd \
     netdata.plist \
+    netdata.crontab \
+    netdata-updater.service \
     $(NULL)
 
 dist_noinst_DATA = \
@@ -47,4 +55,7 @@ dist_noinst_DATA = \
     netdata-freebsd.in \
     netdata.plist.in \
     netdata.conf \
+    netdata.crontab.in \
+    netdata-updater.service.in \
+    netdata-updater.timer \
     $(NULL)

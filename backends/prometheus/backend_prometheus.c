@@ -205,7 +205,7 @@ static int print_host_variables(RRDVAR *rv, void *data) {
                            , opts->labels
                            , label_post
                            , value
-                           , ((rv->last_updated) ? rv->last_updated : opts->now) * 1000ULL
+                           , opts->now * 1000ULL
             );
         else
             buffer_sprintf(opts->wb, "%s_%s%s%s%s " CALCULATED_NUMBER_FORMAT "\n"
@@ -374,7 +374,7 @@ static void rrd_stats_api_v1_charts_allmetrics_prometheus(RRDHOST *host, BUFFER 
                                 );
 
                             if(unlikely(output_options & BACKENDS_PROMETHEUS_OUTPUT_TYPES))
-                                buffer_sprintf(wb, "# COMMENT TYPE %s_%s%s %s\n"
+                                buffer_sprintf(wb, "# TYPE %s_%s%s %s\n"
                                                , prefix
                                                , context
                                                , suffix
@@ -432,7 +432,7 @@ static void rrd_stats_api_v1_charts_allmetrics_prometheus(RRDHOST *host, BUFFER 
                                 );
 
                             if(unlikely(output_options & BACKENDS_PROMETHEUS_OUTPUT_TYPES))
-                                buffer_sprintf(wb, "# COMMENT TYPE %s_%s_%s%s %s\n"
+                                buffer_sprintf(wb, "# TYPE %s_%s_%s%s %s\n"
                                                , prefix
                                                , context
                                                , dimension
@@ -495,7 +495,7 @@ static void rrd_stats_api_v1_charts_allmetrics_prometheus(RRDHOST *host, BUFFER 
                                 );
 
                             if (unlikely(output_options & BACKENDS_PROMETHEUS_OUTPUT_TYPES))
-                                buffer_sprintf(wb, "# COMMENT TYPE %s_%s%s%s gauge\n"
+                                buffer_sprintf(wb, "# TYPE %s_%s%s%s gauge\n"
                                                , prefix
                                                , context
                                                , units
@@ -545,7 +545,7 @@ inline static void remote_write_split_words(char *str, char **words, int max_wor
     int i = 0;
 
     while(*s && i < max_words - 1) {
-        while(*s && isspace(*s)) s++; // skip spaces to the begining of a tag name
+        while(*s && isspace(*s)) s++; // skip spaces to the beginning of a tag name
 
         if(*s)
             words[i] = s;
@@ -560,7 +560,7 @@ inline static void remote_write_split_words(char *str, char **words, int max_wor
         s++;
         i++;
 
-        while(*s && isspace(*s)) s++; // skip spaces to the begining of a tag value
+        while(*s && isspace(*s)) s++; // skip spaces to the beginning of a tag value
 
         if(*s && *s == '"') s++; // strip an opening quote
         if(*s)

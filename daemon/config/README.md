@@ -1,9 +1,7 @@
 <!--
----
 title: "Daemon configuration"
-date: 2020-03-31
+description: "The Netdata Agent's daemon is installed preconfigured to collect thousands of metrics every second, but is highly configurable for real-world workloads."
 custom_edit_url: https://github.com/netdata/netdata/edit/master/daemon/config/README.md
----
 -->
 
 # Daemon configuration
@@ -30,10 +28,11 @@ The configuration file is a `name = value` dictionary. Netdata will not complain
 
 ## Applying changes
 
-After `netdata.conf` has been modified, Netdata needs to be restarted for changes to apply:
+After `netdata.conf` has been modified, Netdata needs to be [restarted](/docs/configure/start-stop-restart.md) for
+changes to apply:
 
 ```bash
-sudo service netdata restart
+sudo systemctl restart netdata
 ```
 
 If the above does not work, try the following:
@@ -51,12 +50,12 @@ Please note that your data history will be lost if you have modified `history` p
 | setting|default|info|||
 |:-----:|:-----:|:---|---|---|
 | process scheduling policy|`keep`|See [Netdata process scheduling policy](/daemon/README.md#netdata-process-scheduling-policy)|||
-| OOM score|`1000`|See [OOM score](../#oom-score)|||
+| OOM score|`1000`|See [OOM score](/daemon/README.md#oom-score)|||
 | glibc malloc arena max for plugins|`1`|See [Virtual memory](/daemon/README.md#virtual-memory).|||
 | glibc malloc arena max for Netdata|`1`|See [Virtual memory](/daemon/README.md#virtual-memory).|||
 | hostname|auto-detected|The hostname of the computer running Netdata.|||
 | history|`3996`| Used with `memory mode = save/map/ram/alloc`, not the default `memory mode = dbengine`. This number reflects the number of entries the `netdata` daemon will by default keep in memory for each chart dimension. This setting can also be configured per chart. Check [Memory Requirements](/database/README.md) for more information. |||
-| update every|`1`|The frequency in seconds, for data collection. For more information see [Performance](/docs/Performance.md).|||
+| update every|`1`|The frequency in seconds, for data collection. For more information see the [performance guide](/docs/guides/configure/performance.md).|||
 | config directory|`/etc/netdata`|The directory configuration files are kept.|||
 | stock config directory|`/usr/lib/netdata/conf.d`||||
 | log directory|`/var/log/netdata`|The directory in which the [log files](/daemon/README.md#log-files) are kept.|||
@@ -67,7 +66,8 @@ Please note that your data history will be lost if you have modified `history` p
 | plugins directory|`"/usr/libexec/netdata/plugins.d" "/etc/netdata/custom-plugins.d"`|The directory plugin programs are kept. This setting supports multiple directories, space separated. If any directory path contains spaces, enclose it in single or double quotes.|||
 | memory mode         | `dbengine` | `dbengine`: The default for long-term metrics storage with efficient RAM and disk usage. Can be extended with `page cache size` and `dbengine disk space`. <br />`save`: Netdata will save its round robin database on exit and load it on startup. <br />`map`: Cache files will be updated in real-time. Not ideal for systems with high load or slow disks (check `man mmap`). <br />`ram`: The round-robin database will be temporary and it will be lost when Netdata exits. <br />`none`: Disables the database at this host, and disables health monitoring entirely, as that requires a database of metrics. |
 | page cache size     | 32         | Determines the amount of RAM in MiB that is dedicated to caching Netdata metric values. |||
-| dbengine disk space | 256        | Determines the amount of disk space in MiB that is dedicated to storing Netdata metric values and all related metadata describing them |||
+| dbengine disk space | 256        | Determines the amount of disk space in MiB that is dedicated to storing Netdata metric values and all related metadata describing them. |||
+| dbengine multihost disk space | 256        | Same functionality as `dbengine disk space`, but includes support for storing metrics streamed to a parent node by its children. Can be used in single-node environments as well. |||
 | host access prefix||This is used in docker environments where /proc, /sys, etc have to be accessed via another path. You may also have to set SYS_PTRACE capability on the docker for this work. Check [issue 43](https://github.com/netdata/netdata/issues/43).|
 | memory deduplication (ksm)|`yes`|When set to `yes`, Netdata will offer its in-memory round robin database to kernel same page merging (KSM) for deduplication. For more information check [Memory Deduplication - Kernel Same Page Merging - KSM](/database/README.md#ksm)|||
 | TZ environment variable|`:/etc/localtime`|Where to find the timezone|||
@@ -76,13 +76,13 @@ Please note that your data history will be lost if you have modified `history` p
 | debug log|`/var/log/netdata/debug.log`|The filename to save debug information. This file will not be created if debugging is not enabled. You can also set it to `syslog` to send the debug messages to syslog, or `none` to disable this log. For more information check [Tracing Options](/daemon/README.md#debugging).|||
 | error log|`/var/log/netdata/error.log`|The filename to save error messages for Netdata daemon and all plugins (`stderr` is sent here for all Netdata programs, including the plugins). You can also set it to `syslog` to send the errors to syslog, or `none` to disable this log.|||
 | access log|`/var/log/netdata/access.log`|The filename to save the log of web clients accessing Netdata charts. You can also set it to `syslog` to send the access log to syslog, or `none` to disable this log.|||
-| errors flood protection period|`1200`|UNUSED - Length of period (in sec) during which the number of errors should not exceed the `errors to trigger flood protection`.|||
-| errors to trigger flood protection|`200`|UNUSED - Number of errors written to the log in `errors flood protection period` sec before flood protection is activated.|||
+| errors flood protection period|`1200`|Length of period (in sec) during which the number of errors should not exceed the `errors to trigger flood protection`.|||
+| errors to trigger flood protection|`200`|Number of errors written to the log in `errors flood protection period` sec before flood protection is activated.|||
 | run as user|`netdata`|The user Netdata will run as.|||
 | pthread stack size|auto-detected||||
 | cleanup obsolete charts after seconds|`3600`|See [monitoring ephemeral containers](/collectors/cgroups.plugin/README.md#monitoring-ephemeral-containers), also sets the timeout for cleaning up obsolete dimensions|||
 | gap when lost iterations above|`1`||||
-| cleanup orphan hosts after seconds|`3600`|How long to wait until automatically removing from the DB a remote Netdata host (slave) that is no longer sending data.|||
+| cleanup orphan hosts after seconds|`3600`|How long to wait until automatically removing from the DB a remote Netdata host (child) that is no longer sending data.|||
 | delete obsolete charts files|`yes`|See [monitoring ephemeral containers](/collectors/cgroups.plugin/README.md#monitoring-ephemeral-containers), also affects the deletion of files for obsolete dimensions|||
 | delete orphan hosts files|`yes`|Set to `no` to disable non-responsive host removal.|||
 | enable zero metrics|`no`|Set to `yes` to show charts when all their metrics are zero.|||
@@ -101,7 +101,7 @@ Additionally, there will be the following options:
 |:-----:|:-----:|:---|
 | PATH environment variable|`auto-detected`||
 | PYTHONPATH environment variable||Used to set a custom python path|
-| enable running new plugins|`yes`|When set to `yes`, Netdata will enable detected plugins, even if they are not configured explicitly. Setting this to `no` will only enable plugins explicitly configirued in this file with a `yes`|
+| enable running new plugins|`yes`|When set to `yes`, Netdata will enable detected plugins, even if they are not configured explicitly. Setting this to `no` will only enable plugins explicitly configured in this file with a `yes`|
 | check for new plugins every|60|The time in seconds to check for new plugins in the plugins directory. This allows having other applications dynamically creating plugins for Netdata.|
 | checks|`no`|This is a debugging plugin for the internal latency|
 
@@ -150,7 +150,7 @@ External plugins will have only 2 options at `netdata.conf`:
 
 | setting | default | info |
 | :-----:|:-----:|:---|
-| update every | the value of `[global].update every` setting|The frequency in seconds the plugin should collect values. For more information check [Performance](/docs/Performance.md#performance).|
+| update every | the value of `[global].update every` setting|The frequency in seconds the plugin should collect values. For more information check the [performance guide](/docs/guides/configure/performance.md).|
 | command options | _empty_ | Additional command line options to pass to the plugin.|
 
 External plugins that need additional configuration may support a dedicated file in `/etc/netdata`. Check their documentation.
@@ -161,7 +161,7 @@ In this area of `netdata.conf` you can find configuration options for individual
 following the pattern `[NAME]`.
 
 Using the settings and values under these sections, you can control all aspects of a specific chart. You can change its
-title, make it appear higher in Netdata's [menu](/web/gui/README.md#menus), tweak its dimensions, and much more.
+title, make it appear higher in Netdata's [menu](/web/gui/README.md#metrics-menus), tweak its dimensions, and much more.
 
 To find the name of a given chart, and thus the name of its section in `netdata.conf`, look at the top-left corner of a
 chart:
@@ -178,7 +178,7 @@ that is information about lines that begin with `dim`, which affect a chart's di
 | `enabled`         | A boolean (`yes` or `no`) that explicitly enables or disables the chart in question.                                                                                                                                                                            |
 | `cache directory` | The directory where cache files for this plugin, if needed, are stored.                                                                                                                                                                                         |
 | `chart type`      | Defines what type of chart to display. It can be `line`, `area`, or `stacked`. If empty or missing, `line` will be used.                                                                                                                                        |
-| `type`            | Uniquely identify which [menu](/web/gui/README.md#menus) on the Netdata dashboard this chart should appear under. Some examples include `system` (**System**), `disk` (**Disks**), `net` (**Network Interfaces**), and `netdata` (**Netdata Monitoring**). |
+| `type`            | Uniquely identify which [metrics menu](/web/gui/README.md#metrics-menus) on the Netdata dashboard this chart should appear under. Some examples include `system` (**System**), `disk` (**Disks**), `net` (**Network Interfaces**), and `netdata` (**Netdata Monitoring**). |
 | `family`          | Change the chart's [family](/web/README.md#families) from its default. For example, you could force a disk space chart to collect metrics for family `sdb` instead of family `sda`.                                                                        |
 | `units`           | Text for the label of the vertical axis of the chart. This means all dimensions should have the same unit of measurement.                                                                                                                                       |
 | `context`         | Change the default [context](/web/README.md#contexts) of the chart. Changing this setting will affect what metrics and metrics the chart displays, and which alarms are attached to it.                                                                    |
@@ -191,7 +191,7 @@ that is information about lines that begin with `dim`, which affect a chart's di
 You may notice some settings that begin with `dim` beneath the ones defined in the table above. These settings determine
 which dimensions appear on the given chart and how Netdata calculates them.
 
-Each dimension setting has the following structure: `dim [DIMENSION ID] [OPTION] = [VALUE]`. The available options are `name`, `algorithm`, `multipler`, and `divisor`.
+Each dimension setting has the following structure: `dim [DIMENSION ID] [OPTION] = [VALUE]`. The available options are `name`, `algorithm`, `multiplier`, and `divisor`.
 
 | Setting      | Function                                                                                                                                                                                                                                                      |
 | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
